@@ -1,65 +1,78 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import comfy from 'comfy.js'
+import gsap from 'gsap'
 
-export default function Home() {
+import { useEffect, useRef, useState, Fragment } from 'react'
+const TAG_LIST = [
+  { label: 'jhey.dev', icon: 'GLOBE' },
+  { label: 'jh3yy', icon: 'TWITTER' },
+]
+const Tags = () => {
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+    <Fragment>
+      {TAG_LIST.map((t, index) => (
+        <div
+          key={t.label}
+          className={`text-white text-5xl ${
+            index === TAG_LIST.length - 1 ? '' : 'mr-6'
+          }`}>
+          {t.label}
         </div>
-      </main>
+      ))}
+    </Fragment>
+  )
+}
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+const Live = () => {
+  const [message, setMessage] = useState(null)
+  const [hue, setHue] = useState(0)
+  const bottomBar = useRef(null)
+  const sideBar = useRef(null)
+  useEffect(() => {
+    comfy.Init('jh3yy')
+    comfy.onCommand = (user, command, message, flags, extra) => {
+      console.info(user, command, message, flags, extra)
+      if (command === 'message') setMessage(`${user} says: "${message}"`)
+      else if (command === 'hue' && !isNaN(parseInt(message, 10)))
+        setHue(message)
+      else if (command.toLowerCase() === 'overlayparty') {
+        gsap
+          .timeline({
+            repeat: 10,
+            onComplete: () => {
+              gsap.set([bottomBar.current, sideBar.current], {
+                '--hue': hue,
+              })
+            },
+          })
+          .fromTo(
+            [bottomBar.current, sideBar.current],
+            {
+              '--hue': 0,
+            },
+            {
+              duration: 0.5,
+              ease: 'none',
+              '--hue': 360,
+            }
+          )
+      }
+    }
+  })
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <h1 className="text-black text-5xl">{message}</h1>
+      <div
+        ref={bottomBar}
+        style={{ '--hue': hue }}
+        className={`fixed flex items-center bottom-0 h-24 bg-hue w-screen animate-scale-x`}>
+        <Tags />
+      </div>
+      <div
+        ref={sideBar}
+        style={{ '--hue': hue }}
+        className={`fixed right-0 w-24 bg-hue h-screen animate-scale-y`}></div>
     </div>
   )
 }
+
+export default Live
